@@ -1,0 +1,3 @@
+cd ml_service
+pip freeze > requirements.txt
+cd ..
