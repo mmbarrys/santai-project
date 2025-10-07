@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './App.css';
 import logo from './assets/JangkarBesi_Logo.png';
-import { Link } from 'react-router-dom'; // [FIX 1]: 'Link' sekarang diimpor
+import { Link } from 'react-router-dom';
 
 function TriagePage({ onLogout }) {
     // =================================================================================
@@ -21,61 +21,87 @@ function TriagePage({ onLogout }) {
     const [checkingIp, setCheckingIp] = useState(null);
 
     // =================================================================================
-    // FUNGSI LOGIKA DAN EVENT HANDLER
+    // FUNGSI LOGIKA DAN EVENT HANDLER (DENGAN PERBAIKAN PADA URL API)
     // =================================================================================
     const handleFileChange = (event) => { setSelectedFile(event.target.files[0]); setTriageResult(null); setError(''); };
     const handleTextChange = (event) => { setLogText(event.target.value); setTriageResult(null); setError(''); };
     const handleTabChange = (type) => { setInputType(type); setSelectedFile(null); setLogText(''); setTriageResult(null); setError(''); };
     
     const handleSubmit = async (event) => {
-    event.preventDefault();
-    setIsLoading(true);
-    setError('');
-    setTriageResult(null);
-    setShowIocAnalysis(false);
-    setIpCheckResults({});
+        event.preventDefault();
+        setIsLoading(true);
+        setError('');
+        setTriageResult(null);
+        setShowIocAnalysis(false);
+        setIpCheckResults({});
 
-    const knowledge = localStorage.getItem('jangkarbesi_knowledge_base') || '[]';
+        const knowledge = localStorage.getItem('jangkarbesi_knowledge_base') || '[]';
+        const apiUrl = process.env.REACT_APP_API_URL; // Mengambil URL backend dari environment
 
-    try {
-        let response;
-        if (inputType === 'image') {
-            if (!selectedFile) { setError('Silakan pilih file gambar terlebih dahulu.'); setIsLoading(false); return; }
-            const formData = new FormData();
-            formData.append('imageFile', selectedFile);
-            formData.append('knowledge', knowledge);
-            response = await axios.post('/api/triage-image', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-        } else if (inputType === 'file') {
-            if (!selectedFile) { setError('Silakan pilih file log terlebih dahulu.'); setIsLoading(false); return; }
-            const formData = new FormData();
-            formData.append('logFile', selectedFile);
-            formData.append('knowledge', knowledge);
-            response = await axios.post('/api/triage', formData);
-        } else { // inputType === 'text'
-            if (!logText.trim()) { setError('Silakan masukkan potongan log terlebih dahulu.'); setIsLoading(false); return; }
-            
-            // [ TITIK PERBAIKAN KRUSIAL ADA DI SINI ]
-            // Pastikan URL-nya adalah '/api/triage-text', bukan '/api/triage'
-            response = await axios.post('/api/triage-text', { 
-                logContent: logText, 
-                knowledge: knowledge 
-            });
+        if (!apiUrl) {
+            setError("Kesalahan Konfigurasi: URL API Backend tidak ditemukan. Pastikan environment variable sudah diatur.");
+            setIsLoading(false);
+            return;
         }
-        setTriageResult(response.data);
-    } catch (err) {
-        setError(err.response?.data?.error || 'Gagal memproses permintaan. Periksa koneksi server.');
-        console.error(err);
-    } finally {
-        setIsLoading(false);
-    }
-};
 
-    const handleIpCheck = async (ip) => { /* ... (Fungsi ini tidak berubah) ... */ setCheckingIp(ip); try { const response = await axios.post('/api/check-ip', { ip }); setIpCheckResults(prevResults => ({ ...prevResults, [ip]: { data: response.data, error: null } })); } catch (err) { const errorMessage = err.response?.data?.error || `Gagal memeriksa IP ${ip}.`; setIpCheckResults(prevResults => ({ ...prevResults, [ip]: { data: null, error: errorMessage } })); } finally { setCheckingIp(null); } };
+        try {
+            let response;
+            if (inputType === 'image') {
+                if (!selectedFile) { setError('Silakan pilih file gambar terlebih dahulu.'); setIsLoading(false); return; }
+                const formData = new FormData();
+                formData.append('imageFile', selectedFile);
+                formData.append('knowledge', knowledge);
+                // [PERBAIKAN KRITIS]: Menggunakan URL absolut dari environment variable
+                response = await axios.post(`${apiUrl}/api/triage-image`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
+            } else if (inputType === 'file') {
+                if (!selectedFile) { setError('Silakan pilih file log terlebih dahulu.'); setIsLoading(false); return; }
+                const formData = new FormData();
+                formData.append('logFile', selectedFile);
+                formData.append('knowledge', knowledge);
+                // [PERBAIKAN KRITIS]: Menggunakan URL absolut dari environment variable
+                response = await axios.post(`${apiUrl}/api/triage`, formData);
+            } else { // inputType === 'text'
+                if (!logText.trim()) { setError('Silakan masukkan potongan log terlebih dahulu.'); setIsLoading(false); return; }
+                // [PERBAIKAN KRITIS]: Menggunakan URL absolut dari environment variable
+                response = await axios.post(`${apiUrl}/api/triage-text`, { 
+                    logContent: logText, 
+                    knowledge: knowledge 
+                });
+            }
+            setTriageResult(response.data);
+        } catch (err) {
+            setError(err.response?.data?.error || 'Gagal memproses permintaan. Periksa koneksi server.');
+            console.error(err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleIpCheck = async (ip) => {
+        const apiUrl = process.env.REACT_APP_API_URL;
+        setCheckingIp(ip);
+        try {
+            // [PERBAIKAN KRITIS]: Menggunakan URL absolut dari environment variable
+            const response = await axios.post(`${apiUrl}/api/check-ip`, { ip });
+            setIpCheckResults(prevResults => ({
+                ...prevResults,
+                [ip]: { data: response.data, error: null }
+            }));
+        } catch (err) {
+            const errorMessage = err.response?.data?.error || `Gagal memeriksa IP ${ip}.`;
+            setIpCheckResults(prevResults => ({
+                ...prevResults,
+                [ip]: { data: null, error: errorMessage }
+            }));
+        } finally {
+            setCheckingIp(null);
+        }
+    };
 
     // =================================================================================
-    // STRUKTUR TAMPILAN (JSX RENDER)
+    // STRUKTUR TAMPILAN (JSX RENDER) - (Tidak ada perubahan di sini)
     // =================================================================================
     return (
         <div className="app-layout">
@@ -83,7 +109,6 @@ function TriagePage({ onLogout }) {
                 <div className="header-logo-container">
                     <img src={logo} alt="Logo" className="header-logo" />
                     <span>JangkarBesi AI Triage</span>
-                    {/* Tautan navigasi ini sekarang akan berfungsi karena 'Link' sudah diimpor */}
                     <nav className="header-nav">
                         <Link to="/knowledge-base">Knowledge Base</Link>
                     </nav>
@@ -93,7 +118,7 @@ function TriagePage({ onLogout }) {
             <main className="container">
                 <h1>BSSN Cerdas Triage - JangkarBesi</h1>
                 <p>Sistem Analisis Insiden Siber Otomatis berbasis AI</p>
-
+                
                 <div className="input-tabs">
                     <button className={`tab-button ${inputType === 'file' ? 'active' : ''}`} onClick={() => handleTabChange('file')}>Upload Log</button>
                     <button className={`tab-button ${inputType === 'text' ? 'active' : ''}`} onClick={() => handleTabChange('text')}>Input Teks</button>

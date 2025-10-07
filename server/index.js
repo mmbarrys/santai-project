@@ -13,6 +13,9 @@ const PORT = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.get('/', (req, res) => {
+    res.send('🚀 BSSN Cerdas Triage Server is running!');
+});
 
 // --- Konfigurasi & Variabel Global ---
 const upload = multer({ 
