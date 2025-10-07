@@ -6,7 +6,7 @@ import './App.css';
 import logo from './assets/JangkarBesi_Logo.png';
 import { Link } from 'react-router-dom';
 
-function TriagePage({ onLogout }) {
+function TriagePage({ onLogout,user }) {
     // =================================================================================
     // MANAJEMEN STATE (Tidak ada perubahan)
     // =================================================================================
@@ -105,9 +105,10 @@ function TriagePage({ onLogout }) {
                 <div className="header-logo-container">
                     <img src={logo} alt="Logo" className="header-logo" />
                     <span>JangkarBesi AI Triage</span>
+                    {user && user.role === 'admin' && 
                     <nav className="header-nav">
                         <Link to="/knowledge-base">Knowledge Base</Link>
-                    </nav>
+                    </nav>}
                 </div>
                 <button onClick={onLogout} className="logout-button">Logout</button>
             </header>

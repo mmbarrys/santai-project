@@ -8,10 +8,14 @@ function LoginPage({ onLogin }) {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const MOCK_USER = 'adminbssn';
-    const MOCK_PASS = 'JangkarBesi2025!';
+    //const MOCK_USER = 'adminbssn';
+    //const MOCK_PASS = 'JangkarBesi2025!';
+    const MOCK_USERS = [
+        { username: 'adminbssn', password: 'JangkarBesi2025!', role: 'admin' },
+        { username: 'user', password: 'user1', role: 'user' }
+    ];
 
-    const handleSubmit = (event) => {
+    /*const handleSubmit = (event) => {
         event.preventDefault();
         if (username === MOCK_USER && password === MOCK_PASS) {
             setError('');
@@ -19,7 +23,24 @@ function LoginPage({ onLogin }) {
         } else {
             setError('Username atau password salah.');
         }
+    };*/
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        
+        // Cari pengguna di dalam daftar
+        const foundUser = MOCK_USERS.find(
+            u => u.username === username && u.password === password
+        );
+
+        if (foundUser) {
+            setError('');
+            // [RBAC] Kirimkan informasi peran (role) saat login berhasil
+            onLogin(foundUser.role);
+        } else {
+            setError('Username atau password salah.');
+        }
     };
+
 
     return (
         <div className="login-container">

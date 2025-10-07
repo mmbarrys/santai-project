@@ -1,6 +1,6 @@
 // client/src/App.js
 
-import React, { useState, useEffect } from 'react';
+/*import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import LoginPage from './LoginPage';
 import TriagePage from './TriagePage';
@@ -51,6 +51,62 @@ function App() {
             />
         </Routes>
         
+    );
+}
+
+export default App;*/
+// client/src/App.js
+
+import React, { useState } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import LoginPage from './LoginPage';
+import TriagePage from './TriagePage';
+import KnowledgeBasePage from './KnowledgeBasePage';
+import './App.css';
+
+function App() {
+    // [RBAC] State sekarang menyimpan seluruh informasi pengguna (termasuk peran), bukan hanya boolean
+    const [currentUser, setCurrentUser] = useState(JSON.parse(localStorage.getItem('santai_user')));
+    const navigate = useNavigate();
+
+    const handleLogin = (role) => {
+        const user = { role: role };
+        localStorage.setItem('santai_user', JSON.stringify(user));
+        setCurrentUser(user);
+        navigate('/');
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('santai_user');
+        setCurrentUser(null);
+        navigate('/login');
+    };
+
+    return (
+        <Routes>
+            <Route 
+                path="/login" 
+                element={
+                    !currentUser ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/" />
+                } 
+            />
+            
+            {/* Rute Triage, bisa diakses oleh semua pengguna yang sudah login */}
+            <Route 
+                path="/" 
+                element={
+                    currentUser ? <TriagePage onLogout={handleLogout} user={currentUser} /> : <Navigate to="/login" />
+                } 
+            />
+
+            {/* [RBAC] Rute Knowledge Base, HANYA bisa diakses jika peran adalah 'admin' */}
+            <Route 
+                path="/knowledge-base" 
+                element={
+                    currentUser && currentUser.role === 'admin' ? <KnowledgeBasePage /> : <Navigate to="/" />
+                } 
+            />
+        </Routes>
     );
 }
 
