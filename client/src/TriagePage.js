@@ -21,13 +21,12 @@ function TriagePage({ onLogout }) {
     const [checkingIp, setCheckingIp] = useState(null);
 
     // =================================================================================
-    // FUNGSI LOGIKA DAN EVENT HANDLER (DENGAN PERBAIKAN PADA URL API)
+    // FUNGSI LOGIKA DAN EVENT HANDLER (DENGAN PERBAIKAN URL API)
     // =================================================================================
     const handleFileChange = (event) => { setSelectedFile(event.target.files[0]); setTriageResult(null); setError(''); };
     const handleTextChange = (event) => { setLogText(event.target.value); setTriageResult(null); setError(''); };
     const handleTabChange = (type) => { setInputType(type); setSelectedFile(null); setLogText(''); setTriageResult(null); setError(''); };
     
-    // [REVISI TOTAL] - Fungsi ini sekarang menggunakan URL Absolut untuk semua panggilan API
     const handleSubmit = async (event) => {
         event.preventDefault();
         setIsLoading(true);
@@ -37,7 +36,7 @@ function TriagePage({ onLogout }) {
         setIpCheckResults({});
 
         const knowledge = localStorage.getItem('jangkarbesi_knowledge_base') || '[]';
-        const apiUrl = process.env.REACT_APP_API_URL; // Mengambil URL backend dari environment
+        const apiUrl = process.env.REACT_APP_API_URL;
 
         if (!apiUrl) {
             setError("Kesalahan Konfigurasi: REACT_APP_API_URL tidak ditemukan. Atur di Netlify.");
@@ -61,7 +60,7 @@ function TriagePage({ onLogout }) {
                 formData.append('logFile', selectedFile);
                 formData.append('knowledge', knowledge);
                 response = await axios.post(`${apiUrl}/api/triage`, formData);
-            } else { // inputType === 'text'
+            } else {
                 if (!logText.trim()) { setError('Silakan masukkan potongan log terlebih dahulu.'); setIsLoading(false); return; }
                 response = await axios.post(`${apiUrl}/api/triage-text`, { 
                     logContent: logText, 
@@ -77,7 +76,6 @@ function TriagePage({ onLogout }) {
         }
     };
 
-    // [REVISI TOTAL] - Fungsi ini juga sekarang menggunakan URL Absolut
     const handleIpCheck = async (ip) => {
         const apiUrl = process.env.REACT_APP_API_URL;
         setCheckingIp(ip);
@@ -99,7 +97,7 @@ function TriagePage({ onLogout }) {
     };
 
     // =================================================================================
-    // STRUKTUR TAMPILAN (JSX RENDER) - (Tidak ada perubahan di sini)
+    // STRUKTUR TAMPILAN (JSX RENDER)
     // =================================================================================
     return (
         <div className="app-layout">
@@ -116,7 +114,6 @@ function TriagePage({ onLogout }) {
             <main className="container">
                 <h1>BSSN Cerdas Triage - JangkarBesi</h1>
                 <p>Sistem Analisis Insiden Siber Otomatis berbasis AI</p>
-                
                 <div className="input-tabs">
                     <button className={`tab-button ${inputType === 'file' ? 'active' : ''}`} onClick={() => handleTabChange('file')}>Upload Log</button>
                     <button className={`tab-button ${inputType === 'text' ? 'active' : ''}`} onClick={() => handleTabChange('text')}>Input Teks</button>
@@ -128,7 +125,7 @@ function TriagePage({ onLogout }) {
                 </form>
                 {error && <p className="error-message">{error}</p>}
                 {isLoading && <div className="loader"></div>}
-                {triageResult && ( <div className="result-section"><h2>Hasil Triage:</h2>{triageResult.image_analysis && ( <div className="image-analysis-result"><h3>Analisis dari Gambar:</h3><div className="result-box modelark-response"><pre>{triageResult.image_analysis}</pre></div><h3>Gambar yang Dianalisis:</h3><img src={triageResult.image_data_url} alt="Incident Screenshot" className="triage-image" /></div> )}{triageResult.incident_data && ( <><h3>Data Insiden Terdeteksi (Simulasi):</h3><div className="result-box"><p><strong>Timestamp:</strong> {triageResult.incident_data.timestamp}</p><p><strong>Anomali Ditemukan:</strong> {triageResult.incident_data.anomalies_found.join(', ')}</p><p><strong>Cuplikan Log Mentah:</strong></p><pre className="raw-log">{triageResult.incident_data.raw_log_excerpt}</pre></div><h3>Respons dari BytePlus ModelArk:</h3><div className="result-box modelark-response"><pre>{triageResult.modelark_response}</pre></div> {(() => { const foundIps = [...new Set((triageResult.incident_data.raw_log_excerpt || '').match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g) || [])]; if (foundIps.length === 0) return null; if (!showIocAnalysis) { return ( <div className="ioc-prompt"><button className="action-button" onClick={() => setShowIocAnalysis(true)}>Lanjutkan Analisis Reputasi IoC</button></div> ); } return ( <><h3>Analisis Reputasi IoC:</h3><div className="result-box ioc-analysis"><ul className="ioc-list">{foundIps.map(ip => ( <li key={ip}><span className="ioc-item">{ip}</span><button className="check-button" onClick={() => handleIpCheck(ip)} disabled={checkingIp === ip}>{checkingIp === ip ? 'Memeriksa...' : 'Cek Reputasi (VirusTotal)'}</button>{ipCheckResults[ip] && ( <div className="reputation-result">{ipCheckResults[ip].error ? ( <p className="error-text">{ipCheckResults[ip].error}</p> ) : ( <> <p><strong>Owner:</strong> {ipCheckResults[ip].data.owner}</p> <p><strong>Skor Analisis (Malicious / Total):</strong><span className={`score-${ipCheckResults[ip].data.last_analysis_stats.malicious > 0 ? 'malicious' : 'clean'}`}>{ipCheckResults[ip].data.last_analysis_stats.malicious} / {Object.values(ipCheckResults[ip].data.last_analysis_stats).reduce((a, b) => a + b, 0)}</span></p> <p><strong>Update Terakhir:</strong> {ipCheckResults[ip].data.last_analysis_date}</p> </> )}</div> )}</li> ))}</ul></div></> ); })()} </> )}</div> )}
+                {triageResult && ( <div className="result-section"><h2>Hasil Triage:</h2>{triageResult.image_analysis && ( <div className="image-analysis-result"><h3>Analisis dari Gambar:</h3><div className="result-box modelark-response"><pre>{triageResult.image_analysis}</pre></div><h3>Gambar yang Dianalisis:</h3><img src={triageResult.image_data_url} alt="Incident Screenshot" className="triage-image" /></div> )}{triageResult.incident_data && ( <><h3>Data Insiden Terdeteksi:</h3><div className="result-box"><p><strong>Timestamp:</strong> {triageResult.incident_data.timestamp}</p><p><strong>Anomali Ditemukan:</strong></p><pre className="raw-log">{triageResult.incident_data.anomalies_found.join('\n')}</pre><p><strong>Cuplikan Log Mentah:</strong></p><pre className="raw-log">{triageResult.incident_data.raw_log_excerpt}</pre></div><h3>Respons dari BytePlus ModelArk:</h3><div className="result-box modelark-response"><pre>{triageResult.modelark_response}</pre></div> {(() => { const foundIps = [...new Set((triageResult.incident_data.raw_log_excerpt || '').match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g) || [])]; if (foundIps.length === 0) return null; if (!showIocAnalysis) { return ( <div className="ioc-prompt"><button className="action-button" onClick={() => setShowIocAnalysis(true)}>Lanjutkan Analisis Reputasi IoC</button></div> ); } return ( <><h3>Analisis Reputasi IoC:</h3><div className="result-box ioc-analysis"><ul className="ioc-list">{foundIps.map(ip => ( <li key={ip}><span className="ioc-item">{ip}</span><button className="check-button" onClick={() => handleIpCheck(ip)} disabled={checkingIp === ip}>{checkingIp === ip ? 'Memeriksa...' : 'Cek Reputasi (VirusTotal)'}</button>{ipCheckResults[ip] && ( <div className="reputation-result">{ipCheckResults[ip].error ? ( <p className="error-text">{ipCheckResults[ip].error}</p> ) : ( <> <p><strong>Owner:</strong> {ipCheckResults[ip].data.owner}</p> <p><strong>Skor Analisis (Malicious / Total):</strong><span className={`score-${ipCheckResults[ip].data.last_analysis_stats.malicious > 0 ? 'malicious' : 'clean'}`}>{ipCheckResults[ip].data.last_analysis_stats.malicious} / {Object.values(ipCheckResults[ip].data.last_analysis_stats).reduce((a, b) => a + b, 0)}</span></p> <p><strong>Update Terakhir:</strong> {ipCheckResults[ip].data.last_analysis_date}</p> </> )}</div> )}</li> ))}</ul></div></> ); })()} </> )}</div> )}
                  <footer><p>&copy; 2025 JangkarBesi - BSSN Cerdas Triage</p></footer>
             </main>
         </div>
