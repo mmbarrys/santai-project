@@ -27,6 +27,7 @@ function TriagePage({ onLogout }) {
     const handleTextChange = (event) => { setLogText(event.target.value); setTriageResult(null); setError(''); };
     const handleTabChange = (type) => { setInputType(type); setSelectedFile(null); setLogText(''); setTriageResult(null); setError(''); };
     
+    // [REVISI TOTAL] - Fungsi ini sekarang menggunakan URL Absolut untuk semua panggilan API
     const handleSubmit = async (event) => {
         event.preventDefault();
         setIsLoading(true);
@@ -39,7 +40,7 @@ function TriagePage({ onLogout }) {
         const apiUrl = process.env.REACT_APP_API_URL; // Mengambil URL backend dari environment
 
         if (!apiUrl) {
-            setError("Kesalahan Konfigurasi: URL API Backend tidak ditemukan. Pastikan environment variable sudah diatur.");
+            setError("Kesalahan Konfigurasi: REACT_APP_API_URL tidak ditemukan. Atur di Netlify.");
             setIsLoading(false);
             return;
         }
@@ -51,7 +52,6 @@ function TriagePage({ onLogout }) {
                 const formData = new FormData();
                 formData.append('imageFile', selectedFile);
                 formData.append('knowledge', knowledge);
-                // [PERBAIKAN KRITIS]: Menggunakan URL absolut dari environment variable
                 response = await axios.post(`${apiUrl}/api/triage-image`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
@@ -60,11 +60,9 @@ function TriagePage({ onLogout }) {
                 const formData = new FormData();
                 formData.append('logFile', selectedFile);
                 formData.append('knowledge', knowledge);
-                // [PERBAIKAN KRITIS]: Menggunakan URL absolut dari environment variable
                 response = await axios.post(`${apiUrl}/api/triage`, formData);
             } else { // inputType === 'text'
                 if (!logText.trim()) { setError('Silakan masukkan potongan log terlebih dahulu.'); setIsLoading(false); return; }
-                // [PERBAIKAN KRITIS]: Menggunakan URL absolut dari environment variable
                 response = await axios.post(`${apiUrl}/api/triage-text`, { 
                     logContent: logText, 
                     knowledge: knowledge 
@@ -79,11 +77,11 @@ function TriagePage({ onLogout }) {
         }
     };
 
+    // [REVISI TOTAL] - Fungsi ini juga sekarang menggunakan URL Absolut
     const handleIpCheck = async (ip) => {
         const apiUrl = process.env.REACT_APP_API_URL;
         setCheckingIp(ip);
         try {
-            // [PERBAIKAN KRITIS]: Menggunakan URL absolut dari environment variable
             const response = await axios.post(`${apiUrl}/api/check-ip`, { ip });
             setIpCheckResults(prevResults => ({
                 ...prevResults,
