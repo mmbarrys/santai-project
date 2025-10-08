@@ -199,7 +199,12 @@ button:disabled { background-color: #555; color: #999; cursor: not-allowed; }
     font-size: 14px;
     line-height: 1.6;
 }
-.raw-log { background-color: #111722; padding: 10px; border-radius: 4px; }
+.raw-log { background-color: #111722;
+    padding: 10px;
+    border-radius: 4px;
+    white-space: pre-wrap;  
+    word-wrap: break-word;   
+    font-size: 13px;  }
 .error-message { color: white; font-weight: bold; background-color: rgba(229, 62, 62, 0.5); padding: 10px; border-radius: 4px; border-left: 5px solid var(--danger-red); }
 .loader { border: 5px solid var(--primary-light); border-top: 5px solid var(--accent-cyan); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -277,4 +282,29 @@ button:disabled { background-color: #555; color: #999; cursor: not-allowed; }
 .modelark-response pre {
     white-space: pre-wrap;  
     word-wrap: break-word; 
+}
+
+.image-analysis-container {
+    background-color: var(--background-dark);
+    padding: 20px;
+    border-left: 5px solid var(--accent-cyan);
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+/* [BARU] Pembungkus untuk gambar itu sendiri, membatasi ukurannya */
+.image-wrapper {
+    margin-top: 15px;
+    max-height: 600px; /* Batasi tinggi maksimal gambar agar tidak terlalu panjang */
+    overflow-y: auto;  /* Jika gambar sangat tinggi, akan muncul scrollbar vertikal */
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+/* [MODIFIKASI] Hapus beberapa properti dari .triage-image karena sudah dihandle oleh wrapper */
+.triage-image {
+    max-width: 100%;
+    height: auto;
+    display: block; /* Menghilangkan spasi ekstra di bawah gambar */
+    /* Hapus border dan margin-top dari sini karena sudah dipindahkan ke .image-wrapper */
 }
